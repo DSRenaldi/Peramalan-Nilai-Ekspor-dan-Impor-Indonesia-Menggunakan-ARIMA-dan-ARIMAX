@@ -1,0 +1,226 @@
+---
+title: "Untitled"
+author: "Dicky Syarif Renaldi"
+date: "2023-05-17"
+output: html_document
+---
+1. Membaca dataset
+```{r}
+data1<-read.csv("Dataset/data_ekspor.csv",header=TRUE)
+head(data1)
+```
+
+2. Membaca data dan mengambil record ke 11 sd 110
+a). Data Nilai Ekspor (KG)
+```{r}
+data.ts.nilai<-data1$Nilai.Ekspor..US...
+data.ts.nilai
+```
+
+```{r}
+library(tseries)
+result_adf <- adf.test(data.ts.nilai)
+result_kpss <- kpss.test(data.ts.nilai)
+result_adf
+result_kpss
+```
+
+
+b). Data Berat Ekspor
+```{r}
+data.ts.berat<-data1$Berat.Ekspor..KG.
+data.ts.berat
+```
+
+```{r}
+library(tseries)
+result_adf <- adf.test(data.ts.berat)
+result_kpss <- kpss.test(data.ts.berat)
+result_adf
+result_kpss
+```
+
+3. Plot time series 
+a). Data Nilai Ekspor (US)
+```{r}
+#. Plot time series
+ts.plot(data.ts.nilai, xlab="Time Period ", ylab="Open Price", main= "Time Series Plot Data Nilai Ekspor (US)")
+points(data.ts.nilai)
+```
+
+
+
+b)Data Berat Ekspor (KG)
+```{r}
+#. Plot time series
+ts.plot(data.ts.berat, xlab="Time Period ", ylab="Open Price", main= "Time Series Plot Data Berat Ekspor (KG)")
+points(data.ts.berat)
+```
+
+4. Plot struktur ACF dan PACF
+a). Data Nilai Ekspor (US)
+```{r}
+par(mfrow=c(2,1),
+ # mengatur margin grafik
+ mar=c(1,1,1,1),
+ # mengatur margin sumbu
+ mex=0.8,
+ # arah tick sumbu koordinat
+ tcl=0.3)
+acf(data.ts.nilai)
+pacf(data.ts.nilai)
+```
+
+b). Data Berat Ekspor (KG)
+```{r}
+par(mfrow=c(2,1),
+ # mengatur margin grafik
+ mar=c(1,1,1,1),
+ # mengatur margin sumbu
+ mex=0.8,
+ # arah tick sumbu koordinat
+ tcl=0.3)
+acf(data.ts.berat)
+pacf(data.ts.berat)
+```
+
+5. Differencing menggunakan log
+a). Data Nilai Ekspor (US)
+```{r}
+log.data.ts.nilai=diff(log(data.ts.nilai))
+log.data.ts.nilai
+```
+
+```{r}
+library(tseries)
+result_adf <- adf.test(log.data.ts.nilai)
+result_kpss <- kpss.test(log.data.ts.nilai)
+result_adf
+result_kpss
+```
+
+b). Data Berat Ekspor (KG)
+```{r}
+log.data.ts.berat=diff(log(data.ts.berat))
+log.data.ts.berat
+```
+
+```{r}
+library(tseries)
+result_adf <- adf.test(log.data.ts.berat)
+result_kpss <- kpss.test(log.data.ts.berat)
+result_adf
+result_kpss
+```
+
+6. Plot time series data nilai ekspor yang telah di differencing
+a). Data Nilai Ekspor (US)
+```{r}
+ts.plot(log.data.ts.nilai, xlab="Time Period ", ylab="Nilai Impor (US)", main= "Time Series Plot Data Differencing Nilai Ekspor (US)")
+points(log.data.ts.nilai)
+```
+
+b). Data Berat Ekspor (KG)
+```{r}
+ts.plot(log.data.ts.berat, xlab="Time Period ", ylab="Nilai Impor (US)", main= "Time Series Plot Data Differencing Berat Ekspor (KG)")
+points(log.data.ts.berat)
+```
+
+7. Struktur plot ACF dan PACF
+a). Data Nilai Ekspor (US)
+```{r}
+par(mfrow=c(2,1),
+ # mengatur margin grafik
+ mar=c(1,1,1,1),
+ # mengatur margin sumbu
+ mex=0.8,
+ # arah tick sumbu koordinat
+ tcl=0.3)
+acf(log.data.ts.nilai)
+pacf(log.data.ts.nilai)
+```
+
+b). Data Berat Ekspor (KG)
+```{r}
+par(mfrow=c(2,1),
+ # mengatur margin grafik
+ mar=c(1,1,1,1),
+ # mengatur margin sumbu
+ mex=0.8,
+ # arah tick sumbu koordinat
+ tcl=0.3)
+acf(log.data.ts.berat)
+pacf(log.data.ts.berat)
+```
+
+8. Estimasi
+a). Data Nilai Ekspor (US)
+```{r}
+datay = log.data.ts.nilai
+library(lmtest)
+estimasi_1 = arima(datay, order=c(0,0,2)); estimasi_1;
+coeftest(estimasi_1)
+estimasi_2 = arima(datay, order=c(3,3,0)); estimasi_2;
+coeftest(estimasi_2)
+estimasi_3 = arima(datay, order=c(1,0,2)); estimasi_3;
+coeftest(estimasi_3)
+estimasi_4 = arima(datay, order=c(2,0,1)); estimasi_4;
+coeftest(estimasi_4)
+estimasi_5 = arima(datay, order=c(2,0,2)); estimasi_5;
+coeftest(estimasi_5)
+```
+
+b). Data Berat Ekspor (KG)
+```{r}
+datax = log.data.ts.berat
+library(lmtest)
+estimasi_6 = arima(datax, order=c(0,0,2)); estimasi_6;
+coeftest(estimasi_6)
+estimasi_7 = arima(datax, order=c(5,4,1)); estimasi_7;
+coeftest(estimasi_7)
+estimasi_8 = arima(datax, order=c(1,0,2)); estimasi_8;
+coeftest(estimasi_8)
+estimasi_9 = arima(datax, order=c(2,0,1)); estimasi_9;
+coeftest(estimasi_9)
+estimasi_10 = arima(datax, order=c(2,0,2)); estimasi_10;
+coeftest(estimasi_10)
+```
+
+9. Diagnosa Model
+a). Data Nilai Ekspor (US)
+```{r}
+residual2 = estimasi_2$residuals
+Box.test(residual2, lag = 12)
+```
+
+b). Data Berat Ekspor (KG)
+```{r}
+residual7 = estimasi_7$residuals
+Box.test(residual7, lag = 12)
+```
+
+10. Estimasi Model ARIMAX
+```{r}
+library(forecast)
+library(lmtest)
+estimasiarmax = Arima(datay, order = c(4,4,0), xreg = datax)
+estimasiarmax; coeftest(estimasiarmax)
+```
+
+11. Diagnosa Model ARIMAX
+```{r}
+res_armax = estimasiarmax$residuals
+Box.test(res_armax, lag = 12)
+```
+
+12. Forecasting
+```{r}
+xreg1 = rep(exp(mean(datax)), 12)
+ramalan = forecast(estimasiarmax, xreg = xreg1, h = 12)
+ramalan
+```
+
+```{r}
+plot(ramalan)
+```
+

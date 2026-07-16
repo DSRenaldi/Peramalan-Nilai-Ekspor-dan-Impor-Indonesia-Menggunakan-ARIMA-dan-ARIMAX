@@ -1,0 +1,137 @@
+---
+title: "Untitled"
+author: "Dicky Syarif Renaldi"
+date: "2023-05-17"
+output: html_document
+---
+1. Mengaktifkan Library
+```{r}
+library("TSA")
+```
+
+2. Membaca dataset
+```{r}
+data1<-read.csv("Dataset/data_ekspor.csv",header=TRUE)
+head(data1)
+```
+
+3. Membaca data dan mengambil record ke 11 sd 110
+```{r}
+data.ts<-data1$Nilai.Impor..US...[11:110]
+data.ts
+```
+
+4. Plot time series data Nilai Ekspor (US)
+```{r}
+ts.plot(data.ts, xlab="Time Period ", ylab="Nilai Impor (US)", main= "Time Series Plot Data Nilai Impor (US)")
+points(data.ts)
+```
+
+5. Plot struktur ACF dan PACF
+```{r}
+par(mfrow=c(2,1),
+ # mengatur margin grafik
+ mar=c(1,1,1,1),
+ # mengatur margin sumbu
+ mex=0.8,
+ # arah tick sumbu koordinat
+ tcl=0.3)
+acf(data.ts)
+pacf(data.ts)
+```
+
+6. Differencing menggunakan log
+```{r}
+log.data.ts=diff(log(data.ts))
+log.data.ts
+```
+
+7. Plot time series data nilai ekspor yang telah di differencing
+```{r}
+ts.plot(log.data.ts, xlab="Time Period ", ylab="Nilai Impor (US)", main= "Time Series Plot Data Differencing Nilai Impor (US)")
+points(log.data.ts)
+```
+
+8. Struktur plot ACF dan PACF
+```{r}
+par(mfrow=c(2,1),
+ # mengatur margin grafik
+ mar=c(1,1,1,1),
+ # mengatur margin sumbu
+ mex=0.8,
+ # arah tick sumbu koordinat
+ tcl=0.3)
+acf(log.data.ts)
+pacf(log.data.ts)
+```
+
+9. Estiamasi model
+```{r}
+
+log.model.arima422<-arima(ts(log.data.ts), order = c(4,2,2), seasonal = list(order=c(2,3,1),period = 12), method = "ML")
+lmtest::coeftest(log.model.arima422)
+
+log.model.sarima442221_12<-arima(ts(log.data.ts), order = c(4,4,2), seasonal = list(order=c(2,2,1),period = 12), method = "ML")
+lmtest::coeftest(log.model.sarima442221_12)
+
+model.sarma211212_12<-arima(ts(log.data.ts), order = c(4,1,3), seasonal=list(order=c(2,1,3),period=12),method = "ML")
+lmtest::coeftest(model.sarma211212_12)
+
+model.arima311102_4 = arima(ts(log.data.ts), order = c(4,1,4), seasonal = list(order = c(1,1,1), period = 12) , method = "ML") 
+lmtest::coeftest(model.arima311102_4)
+
+```
+
+10. Diagnosa model
+```{r}
+(aic.model<-data.frame(
+Model = c( "sarma211212_12", "arima311102_4", "log.model.arima422", "log.model.sarima442221_12"),
+AIC = c(model.sarma211212_12$aic, model.arima311102_4$aic, log.model.arima422$aic, log.model.sarima442221_12$aic),
+sigma2 = c(model.sarma211212_12$sigma2, model.arima311102_4$sigma2, log.model.arima422$sigma2, log.model.sarima442221_12$sigma2)
+)
+)
+```
+
+```{r}
+sisaan <- log.model.sarima442221_12$residuals
+# Eksplorasi
+par(mfrow=c(2,2))
+qqnorm(sisaan)
+qqline(sisaan, col = "blue", lwd = 2)
+plot(c(1:length(sisaan)),sisaan)
+acf(sisaan)
+pacf(sisaan)
+```
+
+Uji formal normalitas data
+```{r}
+ks.test(sisaan, "pnorm")
+```
+Analisis:
+Nilai p-value yg kurang dari 0.05 menandakan bahwa data berdistribusi normal
+
+Uji nilai tengah sisaan
+```{r}
+t.test(sisaan, mu = 0, alternative = "two.sided")
+```
+Analisis:
+Nilai p-value yang lebih dari 0,05 menandakan bahwa tidak ada perbedaan yang signifikan antara rata-rata sampel dengan nilai yang diuji. 
+
+Uji autokorelasi
+```{r}
+Box.test(sisaan, lag = 12, type = "Ljung")
+```
+Analisis:
+Nilai p-value yang lebih dari 0,05 meandakan bahwa terdapat korelasi residual yang signifikan dalam model.
+
+Peramalan
+```{r}
+(ramalan<- forecast::forecast(exp(ts(log.data.ts)),model=log.model.sarima442221_12, h=10))
+```
+Analisis:
+Berdasarkan hasil peramalan diatas, dapat dilihat bahwa terjadi kenaikan nilai yang cukup signifikan untuk Nilai impor
+```{r}
+plot(ramalan)
+```
+Analisis:
+Pada beberapa bulan ke depan, nilai impor (US) Indonesia akan mengalami kenaikan. Hal tersebut di karenakan kebanyakan bahan baku, bahan pokok Indonesia di impor dari luar negeri. Bahkan sampah pun kita impor dari luar negeri. Selain itu, Indonesia sedang mengembangkan bidang Electric Vehicle (EV). Untuk baterainya memang kita produksi dalam negeri, namun untuk komponen-komponen lain masih ada yang menggunakan produk luar. Tidak hanya itu, beberapa bahan pokok kita masih impor dari luar seperti beras, gandum, daging, susu, dll.

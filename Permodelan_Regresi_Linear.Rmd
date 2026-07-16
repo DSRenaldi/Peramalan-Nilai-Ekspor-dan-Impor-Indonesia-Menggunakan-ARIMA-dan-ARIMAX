@@ -1,0 +1,117 @@
+---
+title: "Untitled"
+author: "Dicky Syarif Renaldi"
+date: "2023-05-28"
+output: html_document
+---
+1. Membaca Dataset
+```{r}
+library(caTools)
+data = read.csv("Dataset/data_pdb_ekspor_impor.csv")
+split = sample.split(data, SplitRatio = 0.8)
+training_set = subset(data, split == TRUE)
+testing_set = subset(data, split == FALSE)
+head(training_set)
+```
+
+Reprocecsing Data
+```{r}
+sum(is.na(training_set))
+sum(is.na(testing_set))
+```
+Dari syntax diatas disimpulkan tidak ada data yang kosong
+
+Statistik Deskriptif
+```{r}
+summary(training_set)
+```
+Permodelan 1
+```{r}
+model1 = lm(data$Proporsi.Nilai.Tambah.Sektor.Industri.Manufaktur.Terhadap.PDB~data$Nilai.Ekspor..US...+data$Berat.Ekspor..KG.+data$Nilai.Impor..US...+data$Berat.Impor..KG., data = training_set)
+summary(model1)
+```
+Analisis:
+
+
+```{r}
+par(mfrow = c(2,2))
+plot(model1)
+```
+
+Permodelan 2
+```{r}
+model2 = lm(data$Proporsi.Nilai.Tambah.Sektor.Industri.Manufaktur.Terhadap.PDB~0+data$Nilai.Ekspor..US...+data$Berat.Ekspor..KG.+data$Nilai.Impor..US...+data$Berat.Impor..KG., data = training_set)
+summary(model2)
+```
+
+```{r}
+par(mfrow = c(2,2))
+plot(model2)
+```
+
+Residual
+```{r}
+residual = resid(model2)
+library(nortest)
+lillie.test(residual)
+```
+Analisis:
+Dikarenakan p-value > 0.05, maka model berdistribusi normal
+
+```{r}
+hist(residual, main = "Histogram Residual")
+```
+
+Normalitas dengan QQPlot
+```{r}
+library(lmtest)
+library(car)
+library(timeSeries)
+qqPlot(residual,distribution="norm",main="Normal QQ Plot")
+```
+Analisis:
+  Berdasarkan QQPlot, residual ada di sepanjang garis 45 derajat. Sehingga mengindikasi bahwa residual tersebar secara normal.
+
+Uji Homoskedastisitas
+  Uji ini digunakan untuk menguji keindentikan nilai residual dari suatu model. Yang berarti, uji ini dipergunakan untuk melihat variansi atau keragaman dari residual dipengaruhi faktor lain atau tidak
+```{r}
+bptest(model2,studentize = F)
+```
+Analisis:
+  Dikarenakan nilai dari p-value > 0.05, maka disimpulkan, residual mempunyai variansi yang konstan(homogen)
+
+Uji Autokorelasi
+  Uji autokorelasi diterapkan pada data time series, yang berfungsi untuk menguji apakah ada pengaruh dari data terdahulu terhadap data yang baru
+```{r}
+dwtest(model2)
+```
+Analisis:
+  Uji tersebut menghasilkan nilai dari p-value > 0.05, berdasarkan uji tersebut bisa dikatakan bahwa tidak ada pengaruh antar data sebelum dengan data terbaru. Maka diasumsikan bahwa tidak terjadi autokorelasi antar data sehingga model regresi terpenuhi
+
+Uji Multikolinieritas
+  Uji ini berfungsi untuk meilihat apakah ada korelasi antar variabel independent pada suatu model regresi
+```{r}
+vif(model2)
+```
+Analisis:
+  Dikarenakan nilai dari VIF > 10, maka dapat diambil kesimpulan bahwa terjadi multikolinearitas
+
+```{r}
+training_set$complete = "Y"
+testing_set$complete = "N"
+
+dataset_merged_surveys = rbind(training_set, testing_set)
+dataset_merged_surveys$complete = as.numeric(dataset_merged_surveys$complete )
+```
+
+Uji Korelasi
+```{r}
+NumericasCompleteRespones = dataset_merged_surveys[,c(2,3,5,6)]
+cor(dataset_merged_surveys[,c(2,3,4,5,6)])
+```
+Analisis:
+Nilai Ekspor (US)
+Ketika proporsi nilai tambah sektor industri manufaktur terhadap PDB meningkat, ini menunjukkan bahwa sektor manufaktur dalam negeri telah mampu menghasilkan lebih banyak nilai tambah dari proses produksi. Dalam hal ini, sektor manufaktur mungkin lebih fokus pada pemenuhan kebutuhan pasar dalam negeri atau meningkatkan permintaan domestik. Sebagai akibatnya, ekspor barang manufaktur dapat mengalami penurunan karena lebih banyak produksi yang dialokasikan untuk memenuhi permintaan dalam negeri.
+
+Nilai Impor (US)
+Semakin tinggi proporsi nilai tambah sektor industri manufaktur terhadap PDB, semakin besar kemungkinan bahwa sektor manufaktur dalam negeri mampu memenuhi kebutuhan dalam negeri dengan menggunakan sumber daya dan komponen domestik. Dalam hal ini, sektor manufaktur dapat mengurangi ketergantungan pada impor bahan baku, komponen, dan produk jadi. Sebagai hasilnya, nilai impor dapat mengalami penurunan karena lebih sedikit barang dan komponen yang perlu diimpor untuk proses produksi di sektor manufaktur.
