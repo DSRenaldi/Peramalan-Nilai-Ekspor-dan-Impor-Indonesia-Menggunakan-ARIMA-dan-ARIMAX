@@ -30,8 +30,6 @@ Variabel yang digunakan meliputi:
 
 Data juga tersedia dalam berkas tahunan dari 2014 hingga 2023 dan beberapa berkas Excel berdasarkan kelompok periode. Data tahun 2023 hanya mencakup Januari sampai Maret.
 
-> **Catatan:** Informasi mengenai sumber asli dan lisensi dataset belum tercantum dalam proyek ini dan perlu dilengkapi apabila tersedia.
-
 ## Metode Analisis
 
 ### Analisis Deret Waktu
